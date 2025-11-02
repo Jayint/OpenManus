@@ -26,7 +26,7 @@ class BaseAgent(BaseModel, ABC):
         None, description="System-level instruction prompt"
     )
     next_step_prompt: Optional[str] = Field(
-        None, description="Prompt for determining next action"
+        default=None, description="Prompt for determining next action"
     )
 
     # Dependencies

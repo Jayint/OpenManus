@@ -1,3 +1,6 @@
+from argparse import ArgumentParser, Namespace
+
+
 import argparse
 import asyncio
 
@@ -7,11 +10,11 @@ from app.logger import logger
 
 async def main():
     # Parse command line arguments
-    parser = argparse.ArgumentParser(description="Run Manus agent with a prompt")
+    parser: ArgumentParser = argparse.ArgumentParser(description="Run Manus agent with a prompt")
     parser.add_argument(
         "--prompt", type=str, required=False, help="Input prompt for the agent"
     )
-    args = parser.parse_args()
+    args: Namespace = parser.parse_args()
 
     # Create and initialize Manus agent
     agent = await Manus.create()

@@ -13,7 +13,6 @@ from daytona import (
 from app.config import config
 from app.utils.logger import logger
 
-
 # load_dotenv()
 daytona_settings = config.daytona
 logger.info("Initializing Daytona sandbox configuration")
@@ -38,8 +37,19 @@ if daytona_config.target:
 else:
     logger.warning("No Daytona target found in environment variables")
 
-daytona = Daytona(daytona_config)
-logger.info("Daytona client initialized")
+# Lazy initialization: only create Daytona instance when needed
+_daytona_instance = None
+
+
+def get_daytona_client():
+    """Get or create the Daytona client instance."""
+    global _daytona_instance
+    if _daytona_instance is None:
+        if not daytona_config.api_key:
+            raise ValueError("Daytona API key is required but not configured")
+        _daytona_instance = Daytona(daytona_config)
+        logger.info("Daytona client initialized")
+    return _daytona_instance
 
 
 async def get_or_start_sandbox(sandbox_id: str):
@@ -48,6 +58,7 @@ async def get_or_start_sandbox(sandbox_id: str):
     logger.info(f"Getting or starting sandbox with ID: {sandbox_id}")
 
     try:
+        daytona = get_daytona_client()
         sandbox = daytona.get(sandbox_id)
 
         # Check if sandbox needs to be started
@@ -99,11 +110,13 @@ def start_supervisord_session(sandbox: Sandbox):
         raise e
 
 
-def create_sandbox(password: str, project_id: str = None):
+def create_sandbox(password: str, project_id: str | None = None):
     """Create a new sandbox with all required services configured and running."""
 
     logger.info("Creating new Daytona sandbox environment")
     logger.info("Configuring sandbox with browser-use image and environment variables")
+
+    daytona = get_daytona_client()
 
     labels = None
     if project_id:
@@ -152,6 +165,7 @@ async def delete_sandbox(sandbox_id: str):
     logger.info(f"Deleting sandbox with ID: {sandbox_id}")
 
     try:
+        daytona = get_daytona_client()
         # Get the sandbox
         sandbox = daytona.get(sandbox_id)
 
